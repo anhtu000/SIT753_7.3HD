@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Retailer business Homepage</title>
+    <!-- bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- leaflet js, use for embedding map -->
+    <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/> 
+    <!-- leaflet js, use for embedding map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        .carousel-promo
+        {
+            min-height: 400px;
+            background-color: rgb(165, 197, 197);
+            border-radius: 10px;
+            display: flex;
+        }
+        .hot-products-section 
+        {
+            min-height: 400px;
+            background-color: #d49494;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stickyheader
+        {
+            /* add sticky header*/
+            position: sticky;
+            /* position the sticky header to be on top of the viewport*/
+            top: 0;
+            /* add padding for the header*/
+            padding: 10px 16px;
+            /* Make sure the heading will be on top of other content when scrolling*/
+            z-index: 100;
+        }
+        .product-card {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            background-color: white;
+            overflow: hidden;
+            min-height: 250px;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .product-details {
+            padding: 10px;
+            text-align: center;
+        }
+        .thumbnail-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            display: flex;
+            align-items: center; 
+            justify-content: center;
+        }
+
+        .thumbnail-container .thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasCategory" aria-labelledby="offcanvasCategoryLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasCategoryLabel">Product Category</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="list-group">
+                <li class="list-group-item"><a href="/DProject_ProductList">Mobile Phone</a></li>
+                <li class="list-group-item">Laptop</li>
+                <li class="list-group-item">TV</li>
+                <li class="list-group-item">Accessories</li>
+            </ul>
+        </div>
+    </div>
+    <header class="navbar navbar-expand-lg bg-light border-bottom stickyheader">
+        <div class="container-fluid">
+            <button class="btn btn-outline-primary me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCategory" aria-controls="offcanvasCategory">
+                <span class="navbar-toggler-icon"></span>
+                Products
+            </button>
+            <a class="navbar-brand me-5" href="/"><img src="https://images.unsplash.com/photo-1763929272741-56e50999033f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDZ8fHJhbmRvbSUyMGxvZ298ZW58MHx8MHx8fDA%3D" height="40" width="40" alt="logo"></a>
+            <form class="d-flex flex-grow-1 me-3" role="search" method="POST" action="/DProject_ProductList">
+                <input class="form-control me-2" type="search" placeholder="Search bar" aria-label="Search" name="search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+            <div class="d-flex me-2">
+                <% if (user) { %>
+                    <span class="navbar-text me-2">
+                        <strong><%= user.username %></strong>
+                    </span>
+                    <form method="POST" action="/logout" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger">Logout</button>
+                    </form>
+                <% } else { %>
+                    <a href="/DProject_Login" class="btn btn-outline-secondary">Login / Signup</a>
+                <% } %>
+            </div>
+            <div class="d-flex me-2">
+                <a href="/DProject_Cart" class="btn btn-outline-primary">Cart</a>
+            </div>
+        </div>
+    </header>
+    <main class="container-fluid mt-4">
+        <section class="mb-4">
+            <h2 class="visually-hidden">Promotion</h2>  
+            <div id="promoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                </div>
+                <div class="carousel-inner carousel-promo">
+                    <div class="carousel-item active">
+                        <div class="text-center w-100">Promotion scheme 1</div>
+                        <div class="carousel-caption d-none d-md-block">
+                            <h5>Free Shipping</h5>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="text-center w-100">Promotion scheme 2</div>
+                        <div class="carousel-caption d-none d-md-block">
+                            <h5>Discount 50%</h5>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="text-center w-100">Promotion scheme 3</div>
+                        <div class="carousel-caption d-none d-md-block">
+                            <h5>Membership Deal</h5>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span>Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
+                    <span>Next</span>
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                </button>
+            </div>
+        </section>
+        <section class="hot-products-section">
+            <h3 class="mb-3">🔥 Hot products</h3>
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="product-card">
+                        <div class="thumbnail-container">
+                            <img src="https://www.amaysim.com.au/content/dam/amaysim/devices/phones/samsung/samsung-galaxy-s25-fe/navy/position_1.jpg" class="thumbnail" alt="SamsungGalaxyS25">
+                        </div>
+                        <div class="product-details">
+                            <div><a href="/DProject_ProductDetail" class="fs-5 fw-bold">Samsung Galaxy S25 FE</a></div>
+                            <div>
+                                <p class="mb-0">4900 mAh battery</p>
+                                <p class="mb-0">6.7'' FHD display, up to 120Hz</p>
+                            </div>
+                            <div class="text-success fs-4">$769</div>
+                            <button class="bg-success" onclick=CartAlert()>Add to cart</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="product-card">
+                        <div class="thumbnail-container">
+                            <img src="https://www.amaysim.com.au/content/dam/amaysim/devices/phones/samsung/samsung-galaxy-s25-fe/navy/position_1.jpg" class="thumbnail" alt="SamsungGalaxyS25">
+                        </div>
+                        <div class="product-details">
+                            <div><a href="/DProject_ProductDetail" class="fs-5 fw-bold">Samsung Galaxy S25 FE</a></div>
+                            <div>
+                                <p class="mb-0">4900 mAh battery</p>
+                                <p class="mb-0">6.7'' FHD display, up to 120Hz</p>
+                            </div>
+                            <div class="text-success fs-4">$769</div>
+                            <button class="bg-success" onclick=CartAlert()>Add to cart</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="product-card">
+                        <div class="thumbnail-container">
+                            <img src="https://www.amaysim.com.au/content/dam/amaysim/devices/phones/samsung/samsung-galaxy-s25-fe/navy/position_1.jpg" class="thumbnail" alt="SamsungGalaxyS25">
+                        </div>
+                        <div class="product-details">
+                            <div><a href="/DProject_ProductDetail" class="fs-5 fw-bold">Samsung Galaxy S25 FE</a></div>
+                            <div>
+                                <p class="mb-0">4900 mAh battery</p>
+                                <p class="mb-0">6.7'' FHD display, up to 120Hz</p>
+                            </div>
+                            <div class="text-success fs-4">$769</div>
+                            <button class="bg-success" onclick=CartAlert()>Add to cart</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="product-card">
+                        <div class="thumbnail-container">
+                            <img src="https://www.amaysim.com.au/content/dam/amaysim/devices/phones/samsung/samsung-galaxy-s25-fe/navy/position_1.jpg" class="thumbnail" alt="SamsungGalaxyS25">
+                        </div>
+                        <div class="product-details">
+                            <div><a href="/DProject_ProductDetail" class="fs-5 fw-bold">Samsung Galaxy S25 FE</a></div>
+                            <div>
+                                <p class="mb-0">4900 mAh battery</p>
+                                <p class="mb-0">6.7'' FHD display, up to 120Hz</p>
+                            </div>
+                            <div class="text-success fs-4">$769</div>
+                            <button class="bg-success" onclick=CartAlert()>Add to cart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="bg-dark text-white mt-4 text-center">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-2">
+                    <p>Social Media</p>
+                    <p>Facebook</p>
+                    <p>Instagram</p>
+                    <p>TikTok</p>
+                </div>
+                <div class="col-md-4">
+                    <p><a href="/DProject_About">About us</a></p>
+                    <p>Address: Elizabeth Street, Melbourne CBD</p>
+                    <p>Phone number: 1400 466 586 </p>
+                    <p>Email address: contact@flow.corp.au</p>
+                    <p>Working hour: Monday-Sunday 9:00 am - 6:00 pm</p>
+                </div>
+                <div class="col-md-4">
+                    <p>Map</p>
+                    <div id="map" style="height: 300px;"></div>
+                </div>
+                <div class="col-md-2">
+                    <p><a href="/DProject_CS">Customer service</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script>
+        //use leaflet library to embed map
+        //create a leaflet map and set a starting view point for the map
+        const map = L.map("map").setView([-37.8136, 144.9631], 13); 
+        //declare the map tiles, add to the created map
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", 
+        {
+            attribution: "© OpenStreetMap"
+        }).addTo(map);
+        //create a marker for Our location and add to the map
+        L.marker([-37.8136, 144.9631])
+            .addTo(map)
+            .bindPopup("Our location")
+            .openPopup();
+        //alert when click add to cart
+        function CartAlert()
+        {
+            alert("Product has been added to your cart");
+        }
+    </script>
+</body>
+</html>

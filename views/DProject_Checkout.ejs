@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Secure Checkout</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .checkout-header {
+            padding: 15px;
+            background-color: white;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .main-section {
+            background-color: white;
+            padding: 25px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .box {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .product-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 10px;
+        }
+        .product-item:last-child {
+            border-bottom: none;
+        }
+        .product-image {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-right: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+            background: white;
+        }
+        .stripe-badge {
+            background: linear-gradient(135deg, #635bff 0%, #4f46e5 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .payment-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: white;
+            width: 100%;
+        }
+        .payment-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+            background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+        }
+        .payment-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .total-row {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #28a745;
+            padding-top: 15px;
+            border-top: 2px solid #dee2e6;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        .shipping-badge {
+            background-color: #e7f5ff;
+            color: #0c5fa8;
+            padding: 8px 16px;
+            border-radius: 5px;
+            display: inline-block;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header class="checkout-header">
+        <div class="me-3">
+            <a class="navbar-brand" href="/">
+                <img src="https://images.unsplash.com/photo-1763929272741-56e50999033f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDZ8fHJhbmRvbSUyMGxvZ298ZW58MHx8MHx8fDA%3D" height="40" width="40" alt="logo">
+            </a>
+        </div>
+        <div class="text-center fw-bold fs-3 flex-grow-1">CHECKOUT</div>
+        <% if (user) { %>
+            <div class="text-muted small">
+                <i class="bi bi-person-circle"></i> <strong><%= user.username %></strong>
+            </div>
+        <% } %>
+    </header>
+
+    <main class="container mt-4 mb-5">
+        <% if (!cartItems || cartItems.length === 0) { %>
+            <div class="alert alert-warning text-center py-5">
+                <h4><i class="bi bi-cart-x"></i> Your cart is empty!</h4>
+                <p class="mb-3">Please add items to your cart before checking out.</p>
+                <a href="/DProject_ProductList" class="btn btn-primary btn-lg">Continue Shopping</a>
+            </div>
+        <% } else { %>
+        
+        <!-- Delivery Information Section -->
+        <div class="main-section">
+            <div class="d-flex align-items-center mb-4">
+                <h4 class="mb-0"><i class="bi bi-truck"></i> Delivery Information</h4>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="address" class="form-label">Street Address *</label>
+                    <input type="text" class="form-control" placeholder="123 Main Street" id="address" required>
+                    <div class="text-danger small mt-1 d-none" id="address-error">Please enter your address</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="suburb" class="form-label">Suburb *</label>
+                    <input type="text" class="form-control" placeholder="Melbourne" id="suburb" required>
+                    <div class="text-danger small mt-1 d-none" id="suburb-error">Please enter your suburb</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="state" class="form-label">State *</label>
+                    <select class="form-select" id="state" required>
+                        <option value="">Choose...</option>
+                        <option value="VIC">Victoria</option>
+                        <option value="NSW">New South Wales</option>
+                        <option value="QLD">Queensland</option>
+                        <option value="SA">South Australia</option>
+                        <option value="WA">Western Australia</option>
+                        <option value="TAS">Tasmania</option>
+                        <option value="NT">Northern Territory</option>
+                        <option value="ACT">Australian Capital Territory</option>
+                    </select>
+                    <div class="text-danger small mt-1 d-none" id="state-error">Please select your state</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="postcode" class="form-label">Postcode *</label>
+                    <input type="text" class="form-control" placeholder="3000" id="postcode" maxlength="4" required>
+                    <div class="text-danger small mt-1 d-none" id="postcode-error">Please enter a valid 4-digit postcode</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="mobile" class="form-label">Mobile Number *</label>
+                    <input type="tel" class="form-control" placeholder="0412345678" id="mobile" maxlength="10" required>
+                    <div class="text-danger small mt-1 d-none" id="mobile-error">Please enter a valid 10-digit mobile number</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Order Summary -->
+            <div class="col-md-7">
+                <div class="box">
+                    <h4 class="mb-4"><i class="bi bi-bag-check"></i> Order Summary</h4>
+                    
+                    <div class="mb-4">
+                        <% cartItems.forEach(item => { %>
+                            <div class="product-item">
+                                <img src="<%= item.prd_image %>" alt="<%= item.prd_name %>" class="product-image">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1"><%= item.prd_name %></h6>
+                                    <small class="text-muted">Qty: <%= item.quantity %> × $<%= item.prd_price.toFixed(2) %></small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-success">$<%= (item.prd_price * item.quantity).toFixed(2) %></strong>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Section -->
+            <div class="col-md-5">
+                <div class="box">
+                    <h5 class="mb-4"><i class="bi bi-credit-card"></i> Payment Summary</h5>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span>$<%= cartSummary.subtotal %></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping:</span>
+                            <span>$5.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between total-row">
+                            <span>Total:</span>
+                            <span>$<%= cartSummary.total %></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <button class="btn payment-button" id="checkout-button" onclick="proceedToCheckout()">
+                        <i class="bi bi-lock-fill me-2"></i>
+                        <span id="button-text">Proceed to Stripe Checkout</span>
+                        <span id="button-spinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <% } %>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize Stripe with publishable key
+        const stripe = Stripe('pk_test_51St3uAAImKS6AWL8Hh7jfJh4AiSP5KjdE0ENmrgTZFomOctovbfvhHI2i5uAZUIVPUMDUNaVMyLGE1lRfGsGDZLG00lwKYsn9n');
+
+        // Prices from server
+        const subtotal = parseFloat('<%= cartSummary.subtotal %>');
+        const shippingCost = 5.00;
+        const total = subtotal + shippingCost;
+
+        // Validate delivery fields
+        function validateDeliveryFields() {
+            const address = document.getElementById('address').value.trim();
+            const suburb = document.getElementById('suburb').value.trim();
+            const state = document.getElementById('state').value;
+            const postcode = document.getElementById('postcode').value.trim();
+            const mobile = document.getElementById('mobile').value.trim();
+
+            let isValid = true;
+
+            // Clear all previous errors
+            document.querySelectorAll('[id$="-error"]').forEach(el => el.classList.add('d-none'));
+            document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove('is-invalid'));
+
+            // Validate address
+            if (!address) {
+                document.getElementById('address-error').classList.remove('d-none');
+                document.getElementById('address').classList.add('is-invalid');
+                isValid = false;
+            }
+
+            // Validate suburb
+            if (!suburb) {
+                document.getElementById('suburb-error').classList.remove('d-none');
+                document.getElementById('suburb').classList.add('is-invalid');
+                isValid = false;
+            }
+
+            // Validate state
+            if (!state) {
+                document.getElementById('state-error').classList.remove('d-none');
+                document.getElementById('state').classList.add('is-invalid');
+                isValid = false;
+            }
+
+            // Validate postcode
+            if (!postcode || postcode.length !== 4 || !/^\d{4}$/.test(postcode)) {
+                document.getElementById('postcode-error').classList.remove('d-none');
+                document.getElementById('postcode').classList.add('is-invalid');
+                isValid = false;
+            }
+
+            // Validate mobile
+            if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
+                document.getElementById('mobile-error').classList.remove('d-none');
+                document.getElementById('mobile').classList.add('is-invalid');
+                isValid = false;
+            }
+
+            return {
+                valid: isValid,
+                data: { address, suburb, state, postcode, mobile }
+            };
+        }
+
+        // Proceed to Stripe Checkout
+        async function proceedToCheckout() {
+            const button = document.getElementById('checkout-button');
+            const buttonText = document.getElementById('button-text');
+            const buttonSpinner = document.getElementById('button-spinner');
+
+            // Validate all delivery fields
+            const validation = validateDeliveryFields();
+            if (!validation.valid) {
+                // Scroll to first error
+                const firstError = document.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+                return;
+            }
+
+            // Disable button and show loading
+            button.disabled = true;
+            buttonText.textContent = 'Processing...';
+            buttonSpinner.classList.remove('d-none');
+
+            try {
+                // Calculate total amount in cents
+                const amountInCents = Math.round(total * 100);
+
+                // Prepare request data (always delivery with $5 shipping)
+                const requestData = {
+                    collectionType: 'delivery',
+                    amount: amountInCents,
+                    address: validation.data.address,
+                    suburb: validation.data.suburb,
+                    state: validation.data.state,
+                    postcode: validation.data.postcode,
+                    mobile: validation.data.mobile
+                };
+
+                console.log('Sending to server:', requestData);
+
+                // Call backend to create Stripe checkout session
+                const response = await fetch('/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (!data.sessionId) {
+                    throw new Error('No session ID received from server');
+                }
+
+                console.log('Received session ID:', data.sessionId);
+
+                // Redirect to Stripe Checkout
+                const result = await stripe.redirectToCheckout({
+                    sessionId: data.sessionId
+                });
+
+                if (result.error) {
+                    throw new Error(result.error.message);
+                }
+
+            } catch (error) {
+                console.error('Checkout error:', error);
+                alert('Error: ' + error.message);
+                
+                // Re-enable button
+                button.disabled = false;
+                buttonText.textContent = 'Proceed to Stripe Checkout';
+                buttonSpinner.classList.add('d-none');
+            }
+        }
+    
+    </script>
+</body>
+</html>

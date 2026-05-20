@@ -1,0 +1,5 @@
+route:
+  receiver: "console-alert"
+
+receivers:
+  - name: "console-alert"

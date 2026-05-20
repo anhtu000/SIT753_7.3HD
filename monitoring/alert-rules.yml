@@ -1,0 +1,20 @@
+groups:
+  - name: flow-retail-alerts
+    rules:
+      - alert: FlowProductionAppDown
+        expr: up{job="flow-prod"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "FLOW production app is down"
+          description: "Prometheus cannot scrape the production FLOW app for more than 30 seconds."
+
+      - alert: FlowHighRequestVolume
+        expr: increase(flow_http_requests_total{job="flow-prod"}[1m]) > 50
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request volume on FLOW production app"
+          description: "The production app received more than 50 requests in one minute."

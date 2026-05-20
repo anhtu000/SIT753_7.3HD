@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Customer Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .CS-header 
+        {
+            padding: 15px;
+            background-color: white;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .feedback-container 
+        {
+            border: 1px solid #dee2e6;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .feedback-input-box 
+        {
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <header class="CS-header">
+        <a class="navbar-brand me-5" href="/"><img src="https://images.unsplash.com/photo-1763929272741-56e50999033f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDZ8fHJhbmRvbSUyMGxvZ298ZW58MHx8MHx8fDA%3D" height="40" width="40" alt="logo"></a>
+        <div class='fw-bold fs-3'>Customer service</div>
+    </header>
+    <main class="container py-4">
+        <!-- alert for submitting the form -->
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } else if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success"><%= success %></div>
+        <% } %> 
+        <section class="feedback-container mb-5">        
+            <h4>Send us feedback</h4>
+            <div class="feedback-input-box">
+                <h6 class="mb-3">Have a question or a feedback to improve our website? Send us now!</h6>          
+                <form id="feedbackform" method="POST" action="/submitfeedback">
+                    <div class="mb-3">
+                        <textarea class="form-control" rows="6" placeholder="Type your question or feedback here..." id="feedbacktext" name="message"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </form>
+            </div>
+        </section>
+        <section class="faq-section">        
+            <h4>FAQ</h4>
+            <div class="accordion" id="faqAccordion">         
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            1. How can I track my order?
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            You can track your order by logging into your account and navigating to the 'Order History' section. A tracking link will be provided there.
+                        </div>
+                    </div>
+                </div>        
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            2. What is your return policy?
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Our return policy allows returns within 30 days of purchase, provided the items are unused and in their original packaging.
+                        </div>
+                    </div>
+                </div>         
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            3. Do you offer international shipping?
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes, we offer international shipping to most countries. Shipping costs and delivery times vary by destination.
+                        </div>
+                    </div>
+                </div>
+            </div>    
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    
+</body>
+</html>

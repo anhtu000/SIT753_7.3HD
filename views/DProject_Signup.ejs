@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sign up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        body 
+        {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            /* flex box to align contents */
+            display: flex;
+            justify-content: center; /* horizontal */
+            align-items: center;    /* vertical */
+        }
+        .signup-container 
+        {
+            padding: 30px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <header>
+            <div class="text-center">
+                <a class="navbar-brand" href="/"><img src="https://images.unsplash.com/photo-1763929272741-56e50999033f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDZ8fHJhbmRvbSUyMGxvZ298ZW58MHx8MHx8fDA%3D" height="60" width="60" alt="logo"></a>
+            </div>
+        </header>
+        <main>
+            <div class="container-fluid p-5 bg-light">
+                <h2 class="text-center">Create new account</h2>
+                <form action="/signup" method="post" name="myform" id="firstform" novalidate>
+                    <h4 class="mb-3">Sign Up Detail</h4>
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-4">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="<%= oldData?.username || '' %>">
+                            <% if (errors?.username) { %>
+                                <div class="text-danger mt-1"><%= errors.username %></div>
+                            <% } %>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password">
+                            <% if (errors?.password) { %>
+                                <div class="text-danger mt-1"><%= errors.password %></div>
+                            <% } %>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="repassword" class="form-label">Retype Password</label>
+                            <input type="password" class="form-control" id="repassword" name="repassword">
+                            <% if (errors?.repassword) { %>
+                                <div class="text-danger mt-1"><%= errors.repassword %></div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <h4 class="mb-3">Contact Details</h4>
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-6">
+                            <label for="firstname" class="form-label">Firstname</label>
+                            <input type="text" class="form-control" id="firstname" name="firstname" value="<%= oldData?.firstname || '' %>">
+                            <% if (errors?.firstname) { %>
+                                <div class="text-danger mt-1"><%= errors.firstname %></div>
+                            <% } %>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="surname" class="form-label">Surname</label>
+                            <input type="text" class="form-control" id="surname" name="surname" value="<%= oldData?.surname || '' %>">
+                            <% if (errors?.surname) { %>
+                                <div class="text-danger mt-1"><%= errors.surname %></div>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="<%= oldData?.email || '' %>">
+                            <% if (errors?.email) { %>
+                                <div class="text-danger mt-1"><%= errors.email %></div>
+                            <% } %>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="mobile" class="form-label">Mobile</label>
+                            <input type="number" class="form-control" id="mobile" name="mobile" value="<%= oldData?.mobile || '' %>">
+                            <% if (errors?.mobile) { %>
+                                <div class="text-danger mt-1"><%= errors.mobile %></div>
+                            <% } %>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="birthdate" class="form-label">Birth Date</label>
+                            <input type="date" class="form-control" id="birthdate" name="birthdate" value="<%= oldData?.birthdate || '' %>">
+                            <% if (errors?.birthdate) { %>
+                                <div class="text-danger mt-1"><%= errors.birthdate %></div>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-12">
+                            <label for="address" class="form-label">Address</label>
+                            <input type="text" class="form-control" id="address" name="address" value="<%= oldData?.address || '' %>">
+                            <% if (errors?.address) { %>
+                                <div class="text-danger mt-1"><%= errors.address %></div>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-4">
+                            <label for="city" class="form-label">Suburb</label>
+                            <input type="text" class="form-control" id="city" name="city" value="<%= oldData?.city || '' %>">
+                            <% if (errors?.city) { %>
+                                <div class="text-danger mt-1"><%= errors.city %></div>
+                            <% } %>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="state" class="form-label">State</label>
+                            <select id="state" name="state" class="form-select">
+                                <option>Choose...</option>
+                                <option value="VIC" <%= oldData?.state === 'VIC' ? 'selected' : '' %>>VIC</option>
+                                <option value="NSW" <%= oldData?.state === 'NSW' ? 'selected' : '' %>>NSW</option>
+                                <option value="WA" <%= oldData?.state === 'WA' ? 'selected' : '' %>>WA</option>
+                            </select>
+                            <% if (errors?.state) { %>
+                                <div class="text-danger mt-1"><%= errors.state %></div>
+                            <% } %>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="postcode" class="form-label">Postcode</label>
+                            <input type="number" class="form-control" id="postcode" name="postcode" value="<%= oldData?.postcode || '' %>">
+                            <% if (errors?.postcode) { %>
+                                <div class="text-danger mt-1"><%= errors.postcode %></div>
+                            <% } %>
+                        </div>
+                    </div>
+                    <h4 class="mb-3">Agreements and Subscription</h4>
+                    <div class="row mb-5 gx-5">
+                        <div class="col-12 col-md-4">
+                            <div class="form-check form-switch">
+                                <label class="form-check-label" for="newsletter">Receive Monthly Newsletter</label>
+                                <input class="form-check-input" type="checkbox" role="switch" id="newsletter" name="newsletter" <%= oldData?.newsletter ? 'checked' : '' %>>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="form-check form-switch">
+                                <label class="form-check-label" for="ads">Receive Advertisements</label>
+                                <input class="form-check-input" type="checkbox" role="switch" id="ads" name="ads" <%= oldData?.ads ? 'checked' : '' %>>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="form-check form-switch">
+                                <label class="form-check-label" for="term">Agree to Terms and Conditions</label>
+                                <input class="form-check-input" type="checkbox" role="switch" id="term" name="term" <%= oldData?.term ? 'checked' : '' %>>
+                                <% if (errors?.term) { %>
+                                    <div class="text-danger mt-1"><%= errors.term %></div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 col-2 mx-auto mb-3">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>    
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    
+</body>
+</html>

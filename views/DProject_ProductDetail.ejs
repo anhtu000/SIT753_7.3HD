@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Product Detail</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .stickyheader
+        {
+            /* add sticky header*/
+            position: sticky;
+            /* position the sticky header to be on top of the viewport*/
+            top: 0;
+            /* add padding for the header*/
+            padding: 10px 16px;
+            /* Make sure the heading will be on top of other content when scrolling*/
+            z-index: 100;
+        }
+        .main-detail-section {
+            border: 1px solid #dee2e6;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .carousel-placeholder {
+            min-height: 400px;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+        .product-info-box {
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .specifications-section {
+            min-height: 300px;
+            background-color: white;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-top: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasCategory" aria-labelledby="offcanvasCategoryLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasCategoryLabel">Product Category</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="list-group">
+                <li class="list-group-item"><a href="/DProject_ProductList">Mobile Phone</a></li>
+                <li class="list-group-item">Laptop</li>
+                <li class="list-group-item">TV</li>
+                <li class="list-group-item">Accessories</li>
+            </ul>
+        </div>
+    </div>
+    <header class="navbar navbar-expand-lg bg-light border-bottom stickyheader">
+        <div class="container-fluid">
+            <button class="btn btn-outline-primary me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCategory" aria-controls="offcanvasCategory">
+                <span class="navbar-toggler-icon"></span>
+                Products
+            </button>
+            <a class="navbar-brand me-5" href="/"><img src="https://images.unsplash.com/photo-1763929272741-56e50999033f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDZ8fHJhbmRvbSUyMGxvZ298ZW58MHx8MHx8fDA%3D" height="40" width="40" alt="logo"></a>
+            <form class="d-flex flex-grow-1 me-3" role="search" method="POST" action="/DProject_ProductList">
+                <input class="form-control me-2" type="search" placeholder="Search bar" aria-label="Search" name="search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+            <div class="d-flex me-2">
+                <% if (user) { %>
+                    <span class="navbar-text me-2">
+                        <strong><%= user.username %></strong>
+                    </span>
+                    <form method="POST" action="/logout" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger">Logout</button>
+                    </form>
+                <% } else { %>
+                    <a href="/Dproject_Login" class="btn btn-outline-secondary">Login / Signup</a>
+                <% } %>
+            </div>
+            <div class="d-flex me-2">
+                <a href="/DProject_Cart" class="btn btn-outline-primary">Cart</a>
+            </div>
+        </div>
+    </header>
+    <main class="container mt-4 p-4">
+        <section class="row main-detail-section g-4">
+            <div class="col-md-5 d-flex justify-content-center">
+                <div id="productCarousel" class="carousel slide carousel-fade w-100" data-bs-ride="carousel">
+                    <!-- Indicators -->
+                    <div class="carousel-indicators">
+                        <button type="button" data-bs-target="#productCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                        <button type="button" data-bs-target="#productCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                        <button type="button" data-bs-target="#productCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    </div>
+
+                    <!-- Carousel items -->
+                    <div class="carousel-inner text-center">
+                        <div class="carousel-item active">
+                            <img src="https://www.amaysim.com.au/content/dam/amaysim/devices/phones/samsung/samsung-galaxy-s25-fe/navy/position_1.jpg" class="d-block mx-auto img-fluid" alt="S25FE">
+                        </div>
+                        <div class="carousel-item">
+                            <img src="https://www.amaysim.com.au/content/dam/amaysim/devices/phones/samsung/samsung-galaxy-s25-fe/navy/position_8.jpg" class="d-block mx-auto img-fluid" alt="S25FE">
+                        </div>
+                        <div class="carousel-item">
+                            <img src="https://www.amaysim.com.au/content/dam/amaysim/devices/phones/samsung/samsung-galaxy-s25-fe/navy/position_9.jpg" class="d-block mx-auto img-fluid" alt="S25FE">
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <!-- <span class="visually-hidden">Previous</span> -->
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <!-- <span class="visually-hidden">Next</span> -->
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-7"> 
+                <div class="product-info-box">
+                    <h2>Samsung Galaxy S25 FE</h2>
+                    <p>In stock</p>
+                    <p class="fw-bold fs-3 text-success">$769</p>
+                </div>
+                
+                <div class="product-info-box">
+                    <p>Product type</p>
+                    <div class="btn-group" role="group" aria-label="Producttype">
+                        <input type="radio" class="btn-check" name="prdtype" id="type1" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="type1">128GB</label>
+
+                        <input type="radio" class="btn-check" name="prdtype" id="type2" autocomplete="off">
+                        <label class="btn btn-outline-primary" for="type2">256GB</label>
+
+                        <input type="radio" class="btn-check" name="prdtype" id="type3" autocomplete="off">
+                        <label class="btn btn-outline-primary" for="type3">512GB</label>
+                    </div>
+                </div>  
+                <div class="text-center">
+                    <button class="btn btn-lg btn-success w-50" onclick=CartAlert()>Add to cart</button>
+                </div>
+            </div>
+        </section>
+        <section class="specifications-section container-fluid">
+            <h4 class="mb-4">Product detailed specifications</h4>
+            <img src="https://4a61c644.delivery.rocketcdn.me/wp-content/webp-express/webp-images/uploads/2025/09/samsung-galaxy-s25-fe-announced.jpg.webp" alt="PhoneSpecs" class="img-fluid w-100">
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script>
+        //alert when click add to cart
+        function CartAlert()
+        {
+            alert("Product has been added to your cart");
+        }
+    </script>
+</body>
+</html>
+</body>
