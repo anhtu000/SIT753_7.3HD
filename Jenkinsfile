@@ -192,11 +192,9 @@ pipeline {
                 ]) {
                     sh '''
                         echo "Creating Docker network if it does not exist..."
-
                         docker network create $DOCKER_NETWORK || true
 
                         echo "Removing old staging container..."
-
                         docker rm -f $STAGING_CONTAINER || true
 
                         echo "Deploying application to staging environment..."
@@ -214,13 +212,26 @@ pipeline {
                           -e SKIP_EMAIL=true \
                           $IMAGE_NAME:$BUILD_NUMBER
 
-                        echo "Waiting for staging app to start..."
+                        echo "Waiting for staging app health check..."
 
-                        sleep 8
+                        for i in $(seq 1 20); do
+                          echo "Staging health check attempt $i..."
 
-                        echo "Checking staging health endpoint..."
+                          if docker run --rm --network $DOCKER_NETWORK curlimages/curl:8.10.1 \
+                            -fsS http://$STAGING_CONTAINER:3000/health; then
+                            echo "Staging app is healthy."
+                            exit 0
+                          fi
 
-                        curl -f http://localhost:3001/health
+                          echo "Staging app not ready yet. Showing recent logs:"
+                          docker ps -a --filter "name=$STAGING_CONTAINER"
+                          docker logs --tail 30 $STAGING_CONTAINER || true
+
+                          sleep 3
+                        done
+
+                        echo "Staging health check failed."
+                        exit 1
                     '''
                 }
             }
@@ -240,7 +251,6 @@ pipeline {
                         docker tag $IMAGE_NAME:$BUILD_NUMBER $IMAGE_NAME:production
 
                         echo "Removing old production container..."
-
                         docker rm -f $PROD_CONTAINER || true
 
                         echo "Releasing application to production environment..."
@@ -258,13 +268,26 @@ pipeline {
                           -e SKIP_EMAIL=true \
                           $IMAGE_NAME:prod-$BUILD_NUMBER
 
-                        echo "Waiting for production app to start..."
+                        echo "Waiting for production app health check..."
 
-                        sleep 8
+                        for i in $(seq 1 20); do
+                          echo "Production health check attempt $i..."
 
-                        echo "Checking production health endpoint..."
+                          if docker run --rm --network $DOCKER_NETWORK curlimages/curl:8.10.1 \
+                            -fsS http://$PROD_CONTAINER:3000/health; then
+                            echo "Production app is healthy."
+                            exit 0
+                          fi
 
-                        curl -f http://localhost:3002/health
+                          echo "Production app not ready yet. Showing recent logs:"
+                          docker ps -a --filter "name=$PROD_CONTAINER"
+                          docker logs --tail 30 $PROD_CONTAINER || true
+
+                          sleep 3
+                        done
+
+                        echo "Production health check failed."
+                        exit 1
                     '''
                 }
             }
@@ -278,7 +301,6 @@ pipeline {
                     docker rm -f $PROMETHEUS_CONTAINER $ALERTMANAGER_CONTAINER || true
 
                     echo "Creating Docker network if it does not exist..."
-
                     docker network create $DOCKER_NETWORK || true
 
                     echo "Starting Alertmanager..."
@@ -302,16 +324,17 @@ pipeline {
                       --config.file=$PWD/monitoring/prometheus.yml
 
                     echo "Waiting for monitoring services..."
-
                     sleep 10
 
-                    echo "Checking Prometheus health..."
+                    echo "Checking Prometheus health through Docker network..."
 
-                    curl -f http://localhost:9090/-/healthy
+                    docker run --rm --network $DOCKER_NETWORK curlimages/curl:8.10.1 \
+                      -fsS http://$PROMETHEUS_CONTAINER:9090/-/healthy
 
-                    echo "Checking production metrics endpoint..."
+                    echo "Checking production metrics endpoint through Docker network..."
 
-                    curl -f http://localhost:3002/metrics | head
+                    docker run --rm --network $DOCKER_NETWORK curlimages/curl:8.10.1 \
+                      -fsS http://$PROD_CONTAINER:3000/metrics | head
                 '''
             }
         }
