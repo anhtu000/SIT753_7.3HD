@@ -2,9 +2,19 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
+# Install build tools needed for sqlite3 native module
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3 make g++ ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
 
-RUN npm ci --omit=dev
+# Safer install: do not run package lifecycle scripts automatically
+RUN npm ci --omit=dev --ignore-scripts
+
+# Explicitly rebuild only the dependency that needs native build support
+RUN npm rebuild sqlite3 --build-from-source
 
 COPY . .
 

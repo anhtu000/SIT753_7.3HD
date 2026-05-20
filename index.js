@@ -12,6 +12,9 @@ require('dotenv').config();
 
 
 const app = express();
+
+// Prevent Express from exposing framework information in the X-Powered-By header
+app.disable('x-powered-by');
 const port = process.env.PORT || 3000;
 const sqlite3 = require('sqlite3').verbose();
 const session = require('express-session');
@@ -46,9 +49,14 @@ app.use(express.json());
 app.set('view engine', 'ejs');
 //allow the use of session
 app.use(session({
-  secret: 'your_secret_key',
+  secret: process.env.SESSION_SECRET || 'dev_only_session_secret_for_local_testing',
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: false
+  }
 }));
 //allow the views to have session
 app.use((req, res, next) => {
@@ -807,8 +815,7 @@ app.post('/cart/clear', (req, res) => {
 
 //Checkout - Create Stripe Checkout Session
 app.post('/create-checkout-session', async (req, res) => {
-  console.log('Create checkout session request received');
-  console.log('Request body:', req.body);
+  console.info('Create checkout session request received');
 
   // Check if user is logged in
   if (!req.session.user) {
@@ -817,6 +824,9 @@ app.post('/create-checkout-session', async (req, res) => {
 
   const { collectionType, address, state, suburb, postcode, mobile, amount } = req.body;
   const username = req.session.user.username;
+
+  // Log only safe metadata, not user-controlled personal data
+  console.info('Checkout request validated for authenticated user');
 
   // Validate amount
   if (!amount || amount < 1) {
@@ -867,7 +877,7 @@ app.post('/create-checkout-session', async (req, res) => {
       });
     }
 
-    console.log('Creating Stripe session with line items:', line_items);
+    console.info('Creating Stripe checkout session');
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -893,8 +903,8 @@ app.post('/create-checkout-session', async (req, res) => {
     res.json({ sessionId: session.id });
 
   } catch (err) {
-    console.error('Stripe error:', err);
-    res.status(500).json({ error: err.message || 'Payment processing failed' });
+    console.error('Stripe checkout failed:', err.message);
+    res.status(500).json({ error: 'Payment processing failed' });
   }
 });
 
@@ -910,7 +920,7 @@ app.get('/payment-success', async (req, res) => {
     // Retrieve the session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     
-    console.log('Payment successful:', session);
+    console.info('Payment successful. Stripe session retrieved.');
 
     // Clear the user's cart after successful payment
     const username = req.session.user.username;
