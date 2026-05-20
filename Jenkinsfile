@@ -1,10 +1,17 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+    }
+
     environment {
         APP_NAME = 'flow-retail'
         IMAGE_NAME = 'flow-retail'
         DOCKER_NETWORK = 'flow-net'
+
+        JENKINS_CONTAINER = 'jenkins_modern'
 
         STAGING_CONTAINER = 'flow-staging'
         PROD_CONTAINER = 'flow-prod'
@@ -17,8 +24,18 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+
                 sh '''
-                    echo "Checking Docker version..."
+                    echo "Current Jenkins workspace:"
+                    pwd
+
+                    echo "Files in workspace:"
+                    ls -la
+
+                    echo "Checking package files:"
+                    ls -la package*.json
+
+                    echo "Checking Docker version:"
                     docker --version
                 '''
             }
@@ -28,12 +45,13 @@ pipeline {
             steps {
                 sh '''
                     echo "Installing Node.js dependencies inside Docker..."
+
                     docker run --rm \
-                      -v "$PWD:/app" \
-                      -w /app \
+                      --volumes-from $JENKINS_CONTAINER \
+                      -w "$PWD" \
                       -e npm_config_cache=/tmp/.npm \
                       node:20-bookworm \
-                      bash -lc "npm ci"
+                      bash -lc "pwd && ls -la package*.json && npm ci"
                 '''
             }
         }
@@ -42,25 +60,29 @@ pipeline {
             steps {
                 sh '''
                     echo "Initialising SQLite database..."
+
                     docker run --rm \
-                      -v "$PWD:/app" \
-                      -w /app \
+                      --volumes-from $JENKINS_CONTAINER \
+                      -w "$PWD" \
                       -e npm_config_cache=/tmp/.npm \
                       node:20-bookworm \
                       bash -lc "npm run init-db"
 
                     echo "Building Docker image..."
+
                     docker build -t $IMAGE_NAME:$BUILD_NUMBER .
                     docker tag $IMAGE_NAME:$BUILD_NUMBER $IMAGE_NAME:latest
 
                     echo "Saving Docker image as build artefact..."
+
                     mkdir -p artifacts
                     docker save $IMAGE_NAME:$BUILD_NUMBER | gzip > artifacts/$IMAGE_NAME-$BUILD_NUMBER.tar.gz
                 '''
             }
+
             post {
                 always {
-                    archiveArtifacts artifacts: 'artifacts/*.tar.gz', fingerprint: true
+                    archiveArtifacts allowEmptyArchive: true, artifacts: 'artifacts/*.tar.gz', fingerprint: true
                 }
             }
         }
@@ -69,9 +91,10 @@ pipeline {
             steps {
                 sh '''
                     echo "Running automated Jest/Supertest tests..."
+
                     docker run --rm \
-                      -v "$PWD:/app" \
-                      -w /app \
+                      --volumes-from $JENKINS_CONTAINER \
+                      -w "$PWD" \
                       -e NODE_ENV=test \
                       -e SKIP_EMAIL=true \
                       -e SESSION_SECRET=jenkins-test-session-secret \
@@ -81,6 +104,7 @@ pipeline {
                       bash -lc "npm ci && npm run init-db && npm test"
                 '''
             }
+
             post {
                 always {
                     junit allowEmptyResults: true, testResults: 'reports/junit/*.xml'
@@ -96,10 +120,13 @@ pipeline {
                 ]) {
                     sh '''
                         echo "Running SonarCloud code quality scan..."
+
                         docker run --rm \
+                          --user root \
+                          --volumes-from $JENKINS_CONTAINER \
+                          -w "$PWD" \
                           -e SONAR_HOST_URL="https://sonarcloud.io" \
                           -e SONAR_TOKEN="$SONAR_TOKEN" \
-                          -v "$PWD:/usr/src" \
                           sonarsource/sonar-scanner-cli:latest
                     '''
                 }
@@ -110,36 +137,45 @@ pipeline {
             steps {
                 sh '''
                     echo "Running security scans..."
+
                     mkdir -p reports/security
 
                     echo "Running Trivy filesystem scan..."
+
                     docker run --rm \
-                      -v "$PWD:/src" \
+                      --user root \
+                      --volumes-from $JENKINS_CONTAINER \
+                      -w "$PWD" \
                       aquasec/trivy:latest fs \
                       --severity LOW,MEDIUM,HIGH,CRITICAL \
                       --format table \
-                      --output /src/reports/security/trivy-fs.txt \
-                      /src || true
+                      --output reports/security/trivy-fs.txt \
+                      . || true
 
                     echo "Running Trivy Docker image scan..."
+
                     docker run --rm \
+                      --user root \
                       -v /var/run/docker.sock:/var/run/docker.sock \
-                      -v "$PWD:/src" \
+                      --volumes-from $JENKINS_CONTAINER \
+                      -w "$PWD" \
                       aquasec/trivy:latest image \
                       --severity LOW,MEDIUM,HIGH,CRITICAL \
                       --format table \
-                      --output /src/reports/security/trivy-image.txt \
+                      --output reports/security/trivy-image.txt \
                       $IMAGE_NAME:$BUILD_NUMBER || true
 
                     echo "Running npm audit..."
+
                     docker run --rm \
-                      -v "$PWD:/app" \
-                      -w /app \
+                      --volumes-from $JENKINS_CONTAINER \
+                      -w "$PWD" \
                       -e npm_config_cache=/tmp/.npm \
                       node:20-bookworm \
                       bash -lc "npm audit --audit-level=high > reports/security/npm-audit.txt || true"
                 '''
             }
+
             post {
                 always {
                     archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/security/**'
@@ -155,13 +191,16 @@ pipeline {
                     usernamePassword(credentialsId: 'GMAIL_SMTP', usernameVariable: 'EMAIL_USER', passwordVariable: 'EMAIL_PASS')
                 ]) {
                     sh '''
-                        echo "Creating Docker network if not exists..."
+                        echo "Creating Docker network if it does not exist..."
+
                         docker network create $DOCKER_NETWORK || true
 
                         echo "Removing old staging container..."
+
                         docker rm -f $STAGING_CONTAINER || true
 
                         echo "Deploying application to staging environment..."
+
                         docker run -d \
                           --name $STAGING_CONTAINER \
                           --network $DOCKER_NETWORK \
@@ -176,9 +215,11 @@ pipeline {
                           $IMAGE_NAME:$BUILD_NUMBER
 
                         echo "Waiting for staging app to start..."
+
                         sleep 8
 
                         echo "Checking staging health endpoint..."
+
                         curl -f http://localhost:3001/health
                     '''
                 }
@@ -194,13 +235,16 @@ pipeline {
                 ]) {
                     sh '''
                         echo "Tagging production release image..."
+
                         docker tag $IMAGE_NAME:$BUILD_NUMBER $IMAGE_NAME:prod-$BUILD_NUMBER
                         docker tag $IMAGE_NAME:$BUILD_NUMBER $IMAGE_NAME:production
 
                         echo "Removing old production container..."
+
                         docker rm -f $PROD_CONTAINER || true
 
                         echo "Releasing application to production environment..."
+
                         docker run -d \
                           --name $PROD_CONTAINER \
                           --network $DOCKER_NETWORK \
@@ -215,9 +259,11 @@ pipeline {
                           $IMAGE_NAME:prod-$BUILD_NUMBER
 
                         echo "Waiting for production app to start..."
+
                         sleep 8
 
                         echo "Checking production health endpoint..."
+
                         curl -f http://localhost:3002/health
                     '''
                 }
@@ -231,30 +277,40 @@ pipeline {
 
                     docker rm -f $PROMETHEUS_CONTAINER $ALERTMANAGER_CONTAINER || true
 
+                    echo "Creating Docker network if it does not exist..."
+
+                    docker network create $DOCKER_NETWORK || true
+
                     echo "Starting Alertmanager..."
+
                     docker run -d \
                       --name $ALERTMANAGER_CONTAINER \
                       --network $DOCKER_NETWORK \
+                      --volumes-from $JENKINS_CONTAINER \
                       -p 9093:9093 \
-                      -v "$PWD/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml" \
-                      prom/alertmanager:latest
+                      prom/alertmanager:latest \
+                      --config.file=$PWD/monitoring/alertmanager.yml
 
                     echo "Starting Prometheus..."
+
                     docker run -d \
                       --name $PROMETHEUS_CONTAINER \
                       --network $DOCKER_NETWORK \
+                      --volumes-from $JENKINS_CONTAINER \
                       -p 9090:9090 \
-                      -v "$PWD/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml" \
-                      -v "$PWD/monitoring/alert-rules.yml:/etc/prometheus/alert-rules.yml" \
-                      prom/prometheus:latest
+                      prom/prometheus:latest \
+                      --config.file=$PWD/monitoring/prometheus.yml
 
                     echo "Waiting for monitoring services..."
+
                     sleep 10
 
                     echo "Checking Prometheus health..."
+
                     curl -f http://localhost:9090/-/healthy
 
                     echo "Checking production metrics endpoint..."
+
                     curl -f http://localhost:3002/metrics | head
                 '''
             }
